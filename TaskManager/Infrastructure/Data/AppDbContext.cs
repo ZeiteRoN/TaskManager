@@ -2,19 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using TaskManager.Models;
 using Task = TaskManager.Models.Task;
 
-namespace TaskManager.Data;
+namespace TaskManager.Configuration;
 
-public class AppDbContext: DbContext
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Task> Tasks { get; set; }
-
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-        Database.EnsureDeleted();
-        
-        Database.EnsureCreated();
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,5 +21,4 @@ public class AppDbContext: DbContext
 
         base.OnModelCreating(modelBuilder);
     }
-
 }

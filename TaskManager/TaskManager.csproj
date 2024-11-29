@@ -22,10 +22,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Controllers\" />
-      <Folder Include="DTOs\" />
-      <Folder Include="Migrations\" />
-      <Folder Include="Services\" />
+      <Folder Include="API\Middleware\" />
+      <Folder Include="Application\Services\" />
     </ItemGroup>
 
 </Project>

@@ -8,12 +8,11 @@ namespace TaskManager.API.Controllers;
 [ApiController]
 public class UserController(AppDbContext dbContext) : ControllerBase
 {
-    private readonly AppDbContext _dbContext = dbContext;
 
     [HttpGet("users")]
     public IActionResult GetAllUsers()
     {
-        return Ok(_dbContext.Users.ToList());
+        return Ok(dbContext.Users.ToList());
     }
 
     [HttpPost("register")]

@@ -5,6 +5,11 @@ namespace TaskManager.Infrastructure.Repositories;
 
 public interface IUserRepository
 {
-    Task<User?> GetUserByEmailAsync(string email);
-    Task AddUserAsync(User user);
+    Task<UserEntity?> GetUserByIdAsync(int userId);
+    
+    Task<UserEntity?> GetUserByEmailAsync(string email);
+    
+    Task<bool> ExistByEmailOrUsernameAsync(string email, string username);
+    
+    Task AddUserAsync(UserEntity userEntity);
 }

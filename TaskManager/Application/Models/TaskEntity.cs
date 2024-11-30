@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TaskManager.Models;
 
-public class Task
+public class TaskEntity
 {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -28,5 +28,5 @@ public class Task
         
     [ForeignKey("User")]
     public Guid UserId { get; set; }
-    public User User { get; set; }
+    public UserEntity UserEntity { get; set; }
 }

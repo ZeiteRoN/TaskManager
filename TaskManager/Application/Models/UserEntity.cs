@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TaskManager.Models;
 
-public class User
+public class UserEntity
 {
     [Key]
     public Guid Id { get; set; }
@@ -22,5 +22,5 @@ public class User
     
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
-    public ICollection<Task> Tasks { get; set; }
+    public ICollection<TaskEntity> Tasks { get; set; }
 }

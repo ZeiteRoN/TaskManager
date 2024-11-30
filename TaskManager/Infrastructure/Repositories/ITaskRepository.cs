@@ -1,10 +1,13 @@
+using TaskManager.Models;
+using Task = System.Threading.Tasks.Task;
+
 namespace TaskManager.Infrastructure.Repositories;
 
 public interface ITaskRepository
 {
-    Task<IEnumerable<Task>> GetAllTasksAsync(Guid userId);
-    Task<Task?> GetTaskByIdAsync(Guid taskId);
-    Task AddTaskAsync(Task task);
-    Task UpdateTaskAsync(Task task);
-    Task DeleteTaskAsync(Task task);
+    Task<TaskEntity?> GetTaskByIdAsync(Guid taskId);
+    IQueryable<TaskEntity?> GetTaskByUserId(Guid userId); 
+    Task AddTaskAsync(TaskEntity task);
+    Task UpdateTaskAsync(TaskEntity task);
+    Task DeleteTaskAsync(TaskEntity task);
 }

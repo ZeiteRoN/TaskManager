@@ -1,29 +1,38 @@
+using Microsoft.EntityFrameworkCore;
+using TaskManager.Configuration;
+using TaskManager.Models;
+
 namespace TaskManager.Infrastructure.Repositories;
 
-public class TaskRepository: ITaskRepository
+public class TaskRepository(AppDbContext context) : ITaskRepository
 {
-    public Task<IEnumerable<Task>> GetAllTasksAsync(Guid userId)
+    public async Task<TaskEntity?> GetTaskByIdAsync(Guid taskId)
     {
-        throw new NotImplementedException();
+        return await context.Tasks.
+            Include(t => t.UserEntity)
+            .FirstOrDefaultAsync(t => t.Id == taskId);
     }
 
-    public Task<Task?> GetTaskByIdAsync(Guid taskId)
+    public IQueryable<TaskEntity?> GetTaskByUserId(Guid userId)
     {
-        throw new NotImplementedException();
+        return  context.Tasks.Where(t => t != null && t.UserId == userId);
     }
 
-    public Task AddTaskAsync(Task task)
+    public async Task AddTaskAsync(TaskEntity task)
     {
-        throw new NotImplementedException();
+        context.Tasks.Add(task);
+        await context.SaveChangesAsync();
     }
 
-    public Task UpdateTaskAsync(Task task)
+    public async Task UpdateTaskAsync(TaskEntity task)
     {
-        throw new NotImplementedException();
+        context.Tasks.Update(task);
+        await context.SaveChangesAsync();
     }
 
-    public Task DeleteTaskAsync(Task task)
+    public async Task DeleteTaskAsync(TaskEntity task)
     {
-        throw new NotImplementedException();
+        context.Tasks.Remove(task);
+        await context.SaveChangesAsync();
     }
 }

@@ -1,22 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using TaskManager.Models;
-using Task = TaskManager.Models.Task;
 
 namespace TaskManager.Configuration;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<User> Users { get; set; }
-    public DbSet<Task> Tasks { get; set; }
+    public DbSet<UserEntity?> Users { get; set; }
+    public DbSet<TaskEntity?> Tasks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>()
+        modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.Tasks)
-            .WithOne(t => t.User)
+            .WithOne(t => t.UserEntity)
             .HasForeignKey(t => t.UserId);
         
-        modelBuilder.Entity<Task>()
+        modelBuilder.Entity<TaskEntity>()
             .HasKey(t => t.Id);
 
         base.OnModelCreating(modelBuilder);

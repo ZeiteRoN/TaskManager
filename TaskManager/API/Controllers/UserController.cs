@@ -1,23 +1,30 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using TaskManager.API.DTOs;
+using TaskManager.Application.Services;
 using TaskManager.Configuration;
 
 namespace TaskManager.API.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/users")]
 [ApiController]
-public class UserController(AppDbContext dbContext) : ControllerBase
+public class UserController: ControllerBase
 {
+    private readonly IUserService _userService;
 
-    [HttpGet("users")]
-    public IActionResult GetAllUsers()
+    public UserController(IUserService userService)
     {
-        return Ok(dbContext.Users.ToList());
+        _userService = userService;
+    }
+    [HttpPost("register")]
+    public async Task<IActionResult> RegisterAsync(RegisterDto registerDto)
+    {
+        return Ok(await _userService.RegisterAsync(registerDto.Username, registerDto.Email, registerDto.Password));
     }
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterDto registerDto)
+    [HttpPost("login")]
+    public async Task<IActionResult> LoginAsync(LoginDto loginDto)
     {
-        return await Task.FromResult(Ok());
+        return Ok(await _userService.LoginAsync(loginDto));
     }
 }

@@ -13,14 +13,16 @@ namespace TaskManager.API.Controllers;
 public class TaskController: ControllerBase
 {
     private readonly ITaskService _taskService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public TaskController(ITaskService taskService)
+    public TaskController(ITaskService taskService, IHttpContextAccessor httpContextAccessor)
     {
         _taskService = taskService;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     [Authorize]
-    [HttpGet("{id}")]
+    [HttpGet("getTask")]
     public async Task<IActionResult> GetTaskById(Guid taskId)
     {
         var userid = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
@@ -28,8 +30,31 @@ public class TaskController: ControllerBase
         return Ok(task);
     }
     
+    [HttpPost("addTask")]
     [Authorize]
-    [HttpPut("{id}")]
+    public async Task<IActionResult> CreateTaskAsync([FromBody] CreateTaskDto createTaskDto)
+    {
+        try
+        {
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User ID not found in token.");
+            }
+
+            var task = await _taskService.CreateTaskForUserAsync(createTaskDto, Guid.Parse(userId));
+
+            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+    
+    [Authorize]
+    [HttpPut("updateTask")]
     public async Task<IActionResult> UpdateTask(Guid taskId, UpdateTaskDto dto)
     {
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
@@ -38,7 +63,7 @@ public class TaskController: ControllerBase
     }
     
     [Authorize]
-    [HttpDelete("{id}")]
+    [HttpDelete("deleteTask")]
     public async Task<IActionResult> DeleteTask(Guid taskId)
     {
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);

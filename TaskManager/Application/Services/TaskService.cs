@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using TaskManager.API.DTOs;
 using TaskManager.Infrastructure.Repositories;
 using TaskManager.Models;
 using TaskStatus = TaskManager.Models.TaskStatus;
@@ -14,20 +15,19 @@ public class TaskService: ITaskService
     {
         _taskRepository = taskRepository;
     }
-    
-    public async Task<TaskEntity> CreateTaskForUserAsync(Guid userId, string title, string description, DateTime dueDate, TaskPriority priority)
+
+    public async Task<TaskEntity> CreateTaskForUserAsync(CreateTaskDto createTaskDto, Guid userId)
     {
         var task = new TaskEntity
         {
-            Title = title,
-            Description = description,
-            DueDate = dueDate,
-            Priority = priority,
-            Status = TaskStatus.Pending,
+            Title = createTaskDto.Title,
+            Description = createTaskDto.Description,
+            DueDate = createTaskDto.DueDate,
             UserId = userId,
+            Status = TaskStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         await _taskRepository.AddTaskAsync(task);
         return task;
     }

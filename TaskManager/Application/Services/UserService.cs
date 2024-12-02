@@ -38,8 +38,10 @@ public class UserService: IUserService
 
     public async Task<string?> LoginAsync(LoginDto loginDto)
     {
-        var user = await _userRepository.GetUserByEmailAsync(loginDto.Username);
-        if (user == null || BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+        var user = await _userRepository.GetUserByUsernameAsync(loginDto.Username);
+        Console.WriteLine(loginDto.Password);
+        Console.WriteLine(user.PasswordHash);
+        if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
         {
             throw new UnauthorizedAccessException("Invalid username or password");
         }

@@ -7,10 +7,10 @@ using TaskManager.Configuration;
 
 namespace TaskManager.API.Controllers;
 
-[Authorize]
-[Route("api/[controller]")]
 [ApiController]
-public class TaskController: ControllerBase
+[Route("api/[controller]")]
+[Authorize]
+public class TaskController : ControllerBase
 {
     private readonly ITaskService _taskService;
 
@@ -19,30 +19,101 @@ public class TaskController: ControllerBase
         _taskService = taskService;
     }
 
-    [Authorize]
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetTaskById(Guid taskId)
+    private Guid GetUserIdFromToken()
     {
-        var userid = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-        var task = await _taskService.GetTaskByIdAsync(userid, taskId);
-        return Ok(task);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            throw new UnauthorizedAccessException("User ID not found in token.");
+        }
+
+        return Guid.Parse(userIdClaim);
     }
-    
-    [Authorize]
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateTask(Guid taskId, UpdateTaskDto dto)
+
+    [HttpGet("tasks/getAll")]
+    public async Task<IActionResult> GetTasks([FromQuery] TaskFilterDto filter)
     {
-        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-        var updatedTask = await _taskService.UpdateTaskAsync(userId, taskId, dto.Title, dto.Description, dto.DueDate, dto.Status, dto.Priority);
-        return Ok(updatedTask);
+        try
+        {
+            var userId = GetUserIdFromToken();
+            var tasks = await _taskService.GetTasksForUserAsync(userId, filter);
+
+            return Ok(tasks);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
-    
-    [Authorize]
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTask(Guid taskId)
+
+    [HttpGet("tasks/getById")]
+    public async Task<IActionResult> GetTaskById(Guid id)
     {
-        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-        await _taskService.DeleteTaskAsync(userId, taskId);
-        return NoContent();
+        try
+        {
+            var userId = GetUserIdFromToken();
+            var task = await _taskService.GetTaskByIdAsync(userId, id);
+
+            if (task == null)
+            {
+                return NotFound($"Task with ID {id} not found.");
+            }
+
+            return Ok(task);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    [HttpPost("tasks/addTask")]
+    public async Task<IActionResult> CreateTaskAsync([FromBody] CreateTaskDto createTaskDto)
+    {
+        try
+        {
+            var userId = GetUserIdFromToken();
+            var task = await _taskService.CreateTaskForUserAsync(createTaskDto, userId);
+
+            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    [HttpPut("tasks/updateTask")]
+    public async Task<IActionResult> UpdateTask(Guid taskId, [FromBody] UpdateTaskDto dto)
+    {
+        try
+        {
+            var userId = GetUserIdFromToken();
+            var updatedTask = await _taskService.UpdateTaskAsync(userId, taskId, dto.Title, dto.Description, dto.DueDate, dto.Status, dto.Priority);
+
+            return Ok(updatedTask);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    [HttpDelete("Tasks/deleteTask")]
+    public async Task<IActionResult> Delete(Guid taskId)
+    {
+        try
+        {
+            var userId = GetUserIdFromToken();
+            await _taskService.DeleteTaskAsync(userId, taskId);
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 }
+
+

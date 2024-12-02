@@ -1,12 +1,12 @@
+using TaskManager.API.DTOs;
 using TaskManager.Models;
-using Task = System.Threading.Tasks.Task;
 
 namespace TaskManager.Infrastructure.Repositories;
 
 public interface ITaskRepository
 {
-    Task<TaskEntity?> GetTaskByIdAsync(Guid taskId);
-    IQueryable<TaskEntity?> GetTaskByUserId(Guid userId); 
+    Task<IEnumerable<TaskEntity>> GetTasksByUserIdAsync(Guid userId, TaskFilterDto filter);
+    Task<TaskEntity?> GetTaskByIdAsync(Guid userId, Guid taskId);
     Task AddTaskAsync(TaskEntity task);
     Task UpdateTaskAsync(TaskEntity task);
     Task DeleteTaskAsync(TaskEntity task);

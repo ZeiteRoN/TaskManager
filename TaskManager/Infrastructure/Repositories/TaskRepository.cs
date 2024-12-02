@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using TaskManager.API.DTOs;
 using TaskManager.Configuration;
 using TaskManager.Models;
 
 namespace TaskManager.Infrastructure.Repositories;
 
-public class TaskRepository: ITaskRepository
+public class TaskRepository : ITaskRepository
 {
     private readonly AppDbContext _context;
 
@@ -12,21 +13,31 @@ public class TaskRepository: ITaskRepository
     {
         _context = context;
     }
-    public async Task<TaskEntity?> GetTaskByIdAsync(Guid taskId)
+
+    public async Task<IEnumerable<TaskEntity>> GetTasksByUserIdAsync(Guid userId, TaskFilterDto filter)
     {
-        return await _context.Tasks.
-            Include(t => t.UserEntity)
-            .FirstOrDefaultAsync(t => t.Id == taskId);
+        var query = _context.Tasks.AsQueryable().Where(t => t.UserId == userId);
+
+        if (filter.Status.HasValue)
+            query = query.Where(t => t.Status == filter.Status);
+
+        if (filter.DueDate.HasValue)
+            query = query.Where(t => t.DueDate == filter.DueDate);
+
+        if (filter.Priority.HasValue)
+            query = query.Where(t => t.Priority == filter.Priority);
+
+        return await query.OrderBy(t => t.DueDate).ToListAsync();
     }
 
-    public IQueryable<TaskEntity?> GetTaskByUserId(Guid userId)
+    public async Task<TaskEntity?> GetTaskByIdAsync(Guid userId, Guid taskId)
     {
-        return  _context.Tasks.Where(t => t != null && t.UserId == userId);
+        return await _context.Tasks.FirstOrDefaultAsync(t => t.UserId == userId && t.Id == taskId);
     }
 
     public async Task AddTaskAsync(TaskEntity task)
     {
-        _context.Tasks.Add(task);
+        await _context.Tasks.AddAsync(task);
         await _context.SaveChangesAsync();
     }
 

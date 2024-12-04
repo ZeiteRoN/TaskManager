@@ -19,6 +19,7 @@ public class TaskController : ControllerBase
         _taskService = taskService;
     }
 
+    
     private Guid GetUserIdFromToken()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -30,89 +31,99 @@ public class TaskController : ControllerBase
         return Guid.Parse(userIdClaim);
     }
 
-    [HttpGet("tasks/getAll")]
+    /// <summary>
+    /// Get all tasks for the authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// Retrieves a list of tasks associated with the currently logged-in user.
+    /// You can apply optional filters such as status, due date, or priority.
+    /// </remarks>
+    /// <param name="filter">The filter criteria for tasks (status, due date, priority).</param>
+    /// <response code="200">Returns the list of tasks.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    [HttpGet]
     public async Task<IActionResult> GetTasks([FromQuery] TaskFilterDto filter)
     {
-        try
-        {
-            var userId = GetUserIdFromToken();
-            var tasks = await _taskService.GetTasksForUserAsync(userId, filter);
-
-            return Ok(tasks);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        var userId = GetUserIdFromToken();
+        var tasks = await _taskService.GetTasksForUserAsync(userId, filter);
+        return Ok(tasks);
     }
 
-    [HttpGet("tasks/getById")]
+    /// <summary>
+    /// Get a task by its ID.
+    /// </summary>
+    /// <remarks>
+    /// Retrieves the details of a specific task that belongs to the authenticated user.
+    /// </remarks>
+    /// <param name="id">The ID of the task.</param>
+    /// <response code="200">Returns the task details.</response>
+    /// <response code="404">If the task with the given ID was not found.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetTaskById(Guid id)
     {
-        try
-        {
-            var userId = GetUserIdFromToken();
-            var task = await _taskService.GetTaskByIdAsync(userId, id);
-
-            if (task == null)
-            {
-                return NotFound($"Task with ID {id} not found.");
-            }
-
-            return Ok(task);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        var userId = GetUserIdFromToken();
+        var task = await _taskService.GetTaskByIdAsync(userId, id);
+        return Ok(task);
     }
-
-    [HttpPost("tasks/addTask")]
-    public async Task<IActionResult> CreateTaskAsync([FromBody] CreateTaskDto createTaskDto)
+    
+    
+    /// <summary>
+    /// Create a new task.
+    /// </summary>
+    /// <remarks>
+    /// Creates a new task for the authenticated user. 
+    /// The task requires a title, due date, and priority.
+    /// </remarks>
+    /// <param name="createTaskDto">The task data to create.</param>
+    /// <response code="201">If the task was created successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateTaskDto createTaskDto)
     {
-        try
-        {
-            var userId = GetUserIdFromToken();
-            var task = await _taskService.CreateTaskForUserAsync(createTaskDto, userId);
-
-            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        var userId = GetUserIdFromToken();
+        var task = await _taskService.CreateTaskForUserAsync(createTaskDto, userId);
+        return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
     }
 
-    [HttpPut("tasks/updateTask")]
-    public async Task<IActionResult> UpdateTask(Guid taskId, [FromBody] UpdateTaskDto dto)
+
+    /// <summary>
+    /// Update an existing task.
+    /// </summary>
+    /// <remarks>
+    /// Updates the specified task with new details. 
+    /// Only the task owner can perform this operation.
+    /// </remarks>
+    /// <param name="taskId">The ID of the task to update.</param>
+    /// <param name="dto">The updated task data.</param>
+    /// <response code="200">If the task was updated successfully.</response>
+    /// <response code="404">If the task with the given ID was not found.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    [HttpPut("{taskId}")]
+    public async Task<IActionResult> Update(Guid taskId, [FromBody] UpdateTaskDto dto)
     {
-        try
-        {
-            var userId = GetUserIdFromToken();
-            var updatedTask = await _taskService.UpdateTaskAsync(userId, taskId, dto.Title, dto.Description, dto.DueDate, dto.Status, dto.Priority);
-
-            return Ok(updatedTask);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        var userId = GetUserIdFromToken();
+        var updatedTask = await _taskService.UpdateTaskAsync(userId, taskId, dto.Title, dto.Description, dto.DueDate, dto.Status, dto.Priority);
+        return Ok(updatedTask);
     }
 
-    [HttpDelete("Tasks/deleteTask")]
+    /// <summary>
+    /// Delete a task.
+    /// </summary>
+    /// <remarks>
+    /// Deletes a task by its ID. 
+    /// Only the task owner can perform this operation.
+    /// </remarks>
+    /// <param name="taskId">The ID of the task to delete.</param>
+    /// <response code="204">If the task was deleted successfully.</response>
+    /// <response code="404">If the task with the given ID was not found.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    [HttpDelete("{taskId}")]
     public async Task<IActionResult> Delete(Guid taskId)
     {
-        try
-        {
-            var userId = GetUserIdFromToken();
-            await _taskService.DeleteTaskAsync(userId, taskId);
-
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
+        var userId = GetUserIdFromToken();
+        await _taskService.DeleteTaskAsync(userId, taskId);
+        return NoContent();
     }
 }
 
